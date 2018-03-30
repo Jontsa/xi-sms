@@ -2,52 +2,55 @@
 
 namespace Xi\Sms\Tests\Gateway;
 
+use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\Client;
 use Xi\Sms\SmsMessage;
 use Xi\Sms\Gateway\PixieGateway;
-use Buzz\Message\Response;
 
 class PixieGatewayTest extends \PHPUnit_Framework_TestCase
 {
+
+    use HttpRequestGatewayTestTrait;
+
     private function getMockSuccess()
     {
-        $response = new Response();
-        $response->setContent(
+        $response = new Response(
+            200,
+            array(),
             '<?xml version="1.0" encoding = "ISO-8859-1" ?>'.
                 '<response code="0"><cost>50</cost>'.
-            '</response>');
+            '</response>'
+        );
         return $response;
     }
 
     private function getMockFailure($message, $code)
     {
-        $response = new Response();
-        $response->setContent(
+        $response = new Response(
+            200,
+            array(),
             '<?xml version="1.0" encoding = "ISO-8859-1" ?>'.
                 '<response code="'.$code.'" description="'.$message.'">'.
-            '</response>');
+            '</response>'
+        );
         return $response;
     }
 
     private function getMockInvalidResponse()
     {
-        $response = new Response();
-        $response->setContent('<?not_valid_xml<');
+        $response = new Response(
+            200,
+            array(),
+            '<?not_valid_xml<'
+        );
         return $response;
     }
 
-    private function getMockedGateway()
+    private function getMockedGateway(Client $client)
     {
-        $browser = $this->getMockedBrowser();
         $gateway = new PixieGateway(10203005, "DuY7ye99");
-        $gateway->setClient($browser);
+        $gateway->setClient($client);
         return $gateway;
-    }
-
-    private function getMockedBrowser()
-    {
-        return $this->getMockBuilder('Buzz\Browser')
-            ->disableOriginalConstructor()
-            ->getMock();
     }
 
     /**
@@ -55,13 +58,9 @@ class PixieGatewayTest extends \PHPUnit_Framework_TestCase
      */
     public function sendIgnoresExceptions()
     {
-        $gateway = $this->getMockedGateway();
-        $gateway->getClient()
-            ->expects($this->once())
-            ->method('get')
-            ->will(
-            $this->returnValue($this->getMockFailure('Some kind of failure', 123))
-        );
+        $response = $this->getMockFailure('Some kind of failure', 123);
+        $client = $this->createMockClient($historyContainer, $response);
+        $gateway = $this->getMockedGateway($client);
 
         $message = new SmsMessage(
             'Hello world',
@@ -79,19 +78,9 @@ class PixieGatewayTest extends \PHPUnit_Framework_TestCase
      */
     public function sendsCorrectRequest()
     {
-        $gateway = $this->getMockedGateway();
-
-        $gateway->getClient()
-            ->expects($this->once())
-            ->method('get')
-            ->with(
-                'http://smsserver.pixie.se/sendsms?account=10203005&signature='.
-                '2a6044ac52c48a4531ad5bc2022d3069&receivers=4670234567,463849235'.
-                '&sender=Butiken&message=Rea%20i%20morgon.%20V%C3%A4lkommen',
-                array())
-            ->will(
-            $this->returnValue($this->getMockSuccess())
-        );
+        $response = $this->getMockSuccess();
+        $client = $this->createMockClient($historyContainer, $response);
+        $gateway = $this->getMockedGateway($client);
 
         $message = new SmsMessage(
             'Rea i morgon. Välkommen',
@@ -100,6 +89,15 @@ class PixieGatewayTest extends \PHPUnit_Framework_TestCase
         );
 
         $gateway->sendOrThrowException($message);
+
+        $this->assertCount(1, $historyContainer);
+        $transaction = $historyContainer[0];
+        $expectedUri = 'http://smsserver.pixie.se/sendsms?account=10203005&signature='.
+                       '2a6044ac52c48a4531ad5bc2022d3069&receivers=4670234567,463849235'.
+                       '&sender=Butiken&message=Rea%20i%20morgon.%20V%C3%A4lkommen';
+
+        $this->assertSame('GET', $transaction['request']->getMethod());
+        $this->assertSame($expectedUri, (string) $transaction['request']->getUri());
     }
 
     /**
@@ -107,13 +105,9 @@ class PixieGatewayTest extends \PHPUnit_Framework_TestCase
      */
     public function throwsRuntimeExceptionOnError()
     {
-        $gateway = $this->getMockedGateway();
-        $gateway->getClient()
-            ->expects($this->once())
-            ->method('get')
-            ->will(
-            $this->returnValue($this->getMockFailure("Too long sender name", 402))
-        );
+        $response = $this->getMockFailure("Too long sender name", 402);
+        $client = $this->createMockClient($historyContainer, $response);
+        $gateway = $this->getMockedGateway($client);
 
         $message = new SmsMessage(
             'Nice message',
@@ -124,6 +118,10 @@ class PixieGatewayTest extends \PHPUnit_Framework_TestCase
         $this->setExpectedException('\Xi\Sms\RuntimeException');
 
         $gateway->sendOrThrowException($message);
+
+        $this->assertCount(1, $historyContainer);
+        $transaction = $historyContainer[0];
+        $this->assertSame('GET', $transaction['request']->getMethod());
     }
 
     /**
@@ -131,13 +129,9 @@ class PixieGatewayTest extends \PHPUnit_Framework_TestCase
      */
     public function throwsRuntimeExceptionWithInvalidServerResponse()
     {
-        $gateway = $this->getMockedGateway();
-        $gateway->getClient()
-            ->expects($this->once())
-            ->method('get')
-            ->will(
-            $this->returnValue($this->getMockInvalidResponse())
-        );
+        $response = $this->getMockInvalidResponse();
+        $client = $this->createMockClient($historyContainer, $response);
+        $gateway = $this->getMockedGateway($client);
 
         $message = new SmsMessage(
             'Nice message',
@@ -148,5 +142,9 @@ class PixieGatewayTest extends \PHPUnit_Framework_TestCase
         $this->setExpectedException('Xi\Sms\RuntimeException');
 
         $gateway->sendOrThrowException($message);
+
+        $this->assertCount(1, $historyContainer);
+        $transaction = $historyContainer[0];
+        $this->assertSame('GET', $transaction['request']->getMethod());
     }
 }

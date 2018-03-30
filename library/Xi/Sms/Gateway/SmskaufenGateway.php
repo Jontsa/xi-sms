@@ -11,6 +11,8 @@
 
 namespace Xi\Sms\Gateway;
 
+use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\RequestOptions;
 use Xi\Sms\SmsMessage;
 use Xi\Sms\RuntimeException;
 
@@ -70,10 +72,8 @@ class SmskaufenGateway extends BaseHttpRequestGateway {
 		if (empty($text)) {
 			return false;
 		}
-		if (strlen($text) > 160 &&
-			!in_array($this->settings['gateway'], array(2,3,4,8))) {
+		if (strlen($text) > 160 && !in_array($this->settings['gateway'], array(2,3,4,8))) {
 			throw new RuntimeException('Only gateways 2,3,4,8 allow sending messages with more than 160 chars.');
-			return false;
 		}
 
 		$numbers = (array) $to;
@@ -91,22 +91,22 @@ class SmskaufenGateway extends BaseHttpRequestGateway {
 			$params['termin'] = date('d.m.Y-00:01', strtotime("-1 day")); # past => immediately
 		}
 
-		if (!empty($params['massen']) &&
-			!in_array($this->settings['gateway'], array(2,3,4,8))) {
+		if (!empty($params['massen']) && !in_array($this->settings['gateway'], array(2,3,4,8))) {
 			throw new RuntimeException('Only gateways 2,3,4,8 allow mass sending');
-			return false;
 		}
 
 		$res = $this->getClient()->get(
 			$this->getBaseUrl() . 'sms.php?'.http_build_query($params),
-			array('Content-type' => 'application/x-www-form-urlencoded')
+			array(
+				RequestOptions::HEADERS => array('Content-type' => 'application/x-www-form-urlencoded')
+			)
 		);
 
-		if (!$res->isOk()) {
+		if ($res->getStatusCode() != 200) {
 			return false;
 		}
-		$content = $res->getContent();
-		if ($content != 100 && $content != 101) {
+		$content = (string) $res->getBody();
+		if ($content != '100' && $content != '101') {
 			return false;
 		}
 		return true;

@@ -14,7 +14,7 @@ class BaseHttpRequestGatewayTest extends \PHPUnit_Framework_TestCase
             ->getMockForAbstractClass();
 
         $client = $adapter->getClient();
-        $this->assertInstanceOf('Buzz\Browser', $client);
+        $this->assertInstanceOf('GuzzleHttp\Client', $client);
     }
 
     /**
@@ -26,7 +26,7 @@ class BaseHttpRequestGatewayTest extends \PHPUnit_Framework_TestCase
             ->getMockBuilder('Xi\Sms\Gateway\BaseHttpRequestGateway')
             ->getMockForAbstractClass();
 
-        $client = $this->getMockBuilder('Buzz\Browser')->disableOriginalConstructor()->getMock();
+        $client = $this->getMockBuilder('GuzzleHttp\ClientInterface')->disableOriginalConstructor()->getMock();
 
         $adapter->setClient($client);
 

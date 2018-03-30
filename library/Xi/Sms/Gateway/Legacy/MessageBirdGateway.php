@@ -65,7 +65,7 @@ class MessageBirdGateway extends BaseHttpRequestGateway
                 '&recipients=' . urlencode($to) .
                 '&type=' . urlencode($this->type) .
                 '&message=' . $body;
-            $ret = $this->getClient()->post($url, array());
+            $ret = $this->getClient()->post($url);
         }
 
         return true;

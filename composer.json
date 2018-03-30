@@ -15,7 +15,7 @@
     ],
     "require": {
         "php": ">=5.4.0",
-        "kriswallsmith/buzz": "~0.7",
+        "guzzlehttp/guzzle": "~6.1",
         "symfony/event-dispatcher": "~2.0|~3.0",
         "messagebird/php-rest-api": "~1.1"
     },
@@ -25,7 +25,8 @@
     },
     "autoload": {
         "psr-4": {
-            "Xi\\Sms\\": "library/Xi/Sms/"
+            "Xi\\Sms\\": "library/Xi/Sms/",
+            "Xi\\Sms\\Tests\\": "tests/Xi/Sms/Tests/"
         }
     },
     "minimum-stability": "stable"

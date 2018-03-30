@@ -95,7 +95,9 @@ class InfobipGateway extends BaseHttpRequestGateway
 
         $requestBody = 'XML=' . preg_replace('/<\?xml.*\?>\n?/', '', $writer->outputMemory());
 
-        $this->getClient()->post($this->endpoint . '/v3/sendsms/xml', array(), $requestBody);
+        $this->getClient()->post($this->endpoint . '/v3/sendsms/xml', array(
+            'body' => $requestBody
+        ));
 
         return true;
     }

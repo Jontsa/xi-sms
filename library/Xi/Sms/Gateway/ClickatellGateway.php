@@ -57,7 +57,7 @@ class ClickatellGateway extends BaseHttpRequestGateway
         foreach ($message->getTo() as $to) {
             $url = "{$this->endpoint}/http/sendmsg?api_id={$this->apiKey}&user={$this->user}" .
                 "&password={$this->password}&to={$to}&text={$body}&from={$from}";
-            $this->getClient()->post($url, array());
+            $this->getClient()->post($url);
         }
         return true;
     }

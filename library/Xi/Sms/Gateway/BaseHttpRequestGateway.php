@@ -9,8 +9,9 @@
 
 namespace Xi\Sms\Gateway;
 
-use Buzz\Browser;
-use Buzz\Client\Curl;
+use GuzzleHttp\Client;
+use GuzzleHttp\ClientInterface;
+use GuzzleHttp\RequestOptions;
 
 /**
  * Convenience class for http sending gateways
@@ -18,25 +19,27 @@ use Buzz\Client\Curl;
 abstract class BaseHttpRequestGateway Implements GatewayInterface
 {
     /**
-     * @var Browser
+     * @var ClientInterface
      */
     private $client;
 
     /**
-     * @param Browser $browser
+     * @param ClientInterface $client
      */
-    public function setClient(Browser $browser)
+    public function setClient(ClientInterface $client)
     {
-        $this->client = $browser;
+        $this->client = $client;
     }
 
     /**
-     * @return Browser
+     * @return ClientInterface
      */
     public function getClient()
     {
         if (!$this->client) {
-            $this->client = new Browser(new Curl());
+            $this->client = new Client(array(
+                RequestOptions::HTTP_ERRORS => false
+            ));
         }
         return $this->client;
     }

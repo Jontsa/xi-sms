@@ -9,6 +9,7 @@
 
 namespace Xi\Sms\Gateway;
 
+use Psr\Http\Message\ResponseInterface;
 use Xi\Sms\SmsMessage;
 use Xi\Sms\RuntimeException;
 
@@ -71,7 +72,7 @@ class PixieGateway extends BaseHttpRequestGateway
     public function sendOrThrowException(SmsMessage $message)
     {
         $url = $this->generateUrl($message);
-        $response = $this->getClient()->get($url, array());
+        $response = $this->getClient()->get($url);
         $result = $this->parseResponse($response);
         if ($result === true)
         {
@@ -104,13 +105,13 @@ class PixieGateway extends BaseHttpRequestGateway
     /**
      * Parse response from the server
      *
-     * @param \Buzz\Message\Response $response
+     * @param ResponseInterface $response
      *
      * @return mixed Returns boolean true for success, or RuntimeException for errors
      */
-    private function parseResponse(\Buzz\Message\Response $response)
+    private function parseResponse(ResponseInterface $response)
     {
-        $content = $response->getContent();
+        $content = $response->getBody();
 
         $response = new \DOMDocument();
         $result = @$response->loadXml($content);

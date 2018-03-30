@@ -2,367 +2,213 @@
 
 namespace Xi\Sms\Tests\Gateway;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\Psr7\Response;
+use Xi\Sms\Gateway\SmskaufenGateway;
 use Xi\Sms\SmsMessage;
 use Xi\Sms\SmsService;
-use Xi\Sms\Gateway\SmskaufenGateway;
 
 class SmskaufenGatewayTest extends \PHPUnit_Framework_TestCase
 {
-	/**
-	 * @test
-	 */
-	public function sendMass2() {
 
-		$this->SmskaufenGateway = new SmskaufenGateway(array(
-			'username' => 'XXX',
-			'password' => 'YYY',
-			'gateway' => 13
-		));
+    use HttpRequestGatewayTestTrait;
 
-		$service = new SmsService($this->SmskaufenGateway);
+    /**
+     * Content for exactly 1 message.
+     * @var string
+     */
+    private $message_160 = 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At v';
 
-		$msg = new SmsMessage('Hi', '00491234', array('00491111', '015111111', '0170111111'));
-		$this->setExpectedException('Xi\Sms\RuntimeException');
-		$service->send($msg);
-	}
+    /**
+     * Content for 4 SMS messages.
+     * @var string
+     */
+    private $message_591 = 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.';
 
-	/**
-	 * @test
-	 */
-	public function sendMass1() {
+    private function getMockedGateway(Client $client, $gateway, $https = true)
+    {
+        $SmskaufenGateway = new SmskaufenGateway(array(
+            'username' => 'XXX',
+            'password' => 'YYY',
+            'gateway' => $gateway,
+            'https' => $https
+        ));
+        $SmskaufenGateway->setClient($client);
+        return $SmskaufenGateway;
+    }
 
-		$ResponseMock = $this->getMock('Buzz\Message\Response', array('getContent', 'isOk'));
-		$ResponseMock
-			->expects($this->once())
-			->method('isOk')
-			->will($this->returnValue(false));
+    /**
+     * @test
+     */
+    public function sendMass2()
+    {
+        $client = $this->createMockClient();
+        $gateway = $this->getMockedGateway($client, 13);
 
-		$ClientMock = $this->getMock('Browser', array('get'));
-		$ClientMock
-			->expects($this->once())
-			->method('get')
-			->will($this->returnValue($ResponseMock));
+        $msg = new SmsMessage('Hi', '00491234', array('00491111', '015111111', '0170111111'));
+        $this->setExpectedException('Xi\Sms\RuntimeException');
+        $gateway->send($msg);
+    }
 
-		$this->SmskaufenGateway = $this->getMock('Xi\Sms\Gateway\SmskaufenGateway', array('getClient'), array(array(
-				'username' => 'XXX',
-				'password' => 'YYY',
-				'gateway' => 4
-			)));
-		$this->SmskaufenGateway
-			->expects($this->once())
-			->method('getClient')
-			->will($this->returnValue($ClientMock));
+    /**
+     * @test
+     */
+    public function sendMass1()
+    {
+        $response = new Response(400);
+        $client = $this->createMockClient($historyContainer, $response);
+        $gateway = $this->getMockedGateway($client, 4);
 
-		$service = new SmsService($this->SmskaufenGateway);
-		$msg = new SmsMessage('Hi', '00491234', array('00491111', '015111111', '0170111111'));
-		$service->send($msg); // Should not throw any exception
-	}
+        $msg = new SmsMessage('Hi', '00491234', array('00491111', '015111111', '0170111111'));
+        $response = $gateway->send($msg); // Should not throw any exception
+        $this->assertFalse($response);
+    }
 
-	/**
-	 * @test
-	 */
-	public function sendMaxi3() {
+    /**
+     * @test
+     */
+    public function sendMaxi3()
+    {
+        $response = new Response(400);
+        $client = $this->createMockClient($historyContainer, $response);
+        $gateway = $this->getMockedGateway($client, 4);
 
-		$ResponseMock = $this->getMock('Buzz\Message\Response', array('isOk'));
-		$ResponseMock
-			->expects($this->once())
-			->method('isOk')
-			->will($this->returnValue(false));
+        // Exactly 160 characters
+        $msg = new SmsMessage($this->message_160, '00491234', '00491111');
+        $gateway->send($msg); // Should not throw any exception
+    }
 
-		$ClientMock = $this->getMock('Browser', array('get'));
-		$ClientMock
-			->expects($this->once())
-			->method('get')
-			->will($this->returnValue($ResponseMock));
+    /**
+     * @test
+     */
+    public function sendMaxi2()
+    {
+        $response = new Response(400);
+        $client = $this->createMockClient($historyContainer, $response);
+        $gateway = $this->getMockedGateway($client, 4);
 
-		$this->SmskaufenGateway = $this->getMock('Xi\Sms\Gateway\SmskaufenGateway', array('getClient'), array(array(
-				'username' => 'XXX',
-				'password' => 'YYY',
-				'gateway' => 4
-			)));
-		$this->SmskaufenGateway
-			->expects($this->once())
-			->method('getClient')
-			->will($this->returnValue($ClientMock));
+        $msg = new SmsMessage($this->message_591, '00491234', '00491111');
+        $gateway->send($msg); // Should not throw any exception
+    }
 
-		$service = new SmsService($this->SmskaufenGateway);
+    /**
+     * @test
+     */
+    public function sendMaxi1()
+    {
+        $client = $this->createMockClient();
+        $gateway = $this->getMockedGateway($client, 13);
 
-		// Exactly 160 characters
-		$text = 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At v';
-		$msg = new SmsMessage($text, '00491234', '00491111');
-		$service->send($msg); // Should not throw any exception
-	}
+        $msg = new SmsMessage($this->message_591, '00491234', '00491111');
+        $this->setExpectedException('Xi\Sms\RuntimeException');
+        $gateway->send($msg); // Should not throw any exception
+    }
 
-	/**
-	 * @test
-	 */
-	public function sendMaxi2() {
+    /**
+     * @test
+     */
+    public function sendFail2()
+    {
+        $response = new Response(200, array(), '121');
+        $client = $this->createMockClient($historyContainer, $response);
+        $gateway = $this->getMockedGateway($client, 4);
 
-		$ResponseMock = $this->getMock('Buzz\Message\Response', array('isOk'));
-		$ResponseMock
-			->expects($this->once())
-			->method('isOk')
-			->will($this->returnValue(false));
+        $msg = new SmsMessage('Hi', '00491234', '00491111');
+        $success = $gateway->send($msg);
+        $this->assertFalse($success);
+    }
 
-		$ClientMock = $this->getMock('Browser', array('get'));
-		$ClientMock
-			->expects($this->once())
-			->method('get')
-			->will($this->returnValue($ResponseMock));
+    /**
+     * @test
+     */
+    public function sendFail1()
+    {
+        $response = new Response(404);
+        $client = $this->createMockClient($historyContainer, $response);
+        $gateway = $this->getMockedGateway($client, 4);
 
-		$this->SmskaufenGateway = $this->getMock('Xi\Sms\Gateway\SmskaufenGateway', array('getClient'), array(array(
-				'username' => 'XXX',
-				'password' => 'YYY',
-				'gateway' => 4
-			)));
-		$this->SmskaufenGateway
-			->expects($this->once())
-			->method('getClient')
-			->will($this->returnValue($ClientMock));
+        $msg = new SmsMessage('Hi', '00491234', '00491111');
+        $success = $gateway->send($msg);
+        $this->assertFalse($success);
+    }
 
-		$service = new SmsService($this->SmskaufenGateway);
+    /**
+     * @test
+     */
+    public function sendSuccess()
+    {
+        $response = new Response(200, array(), '100');
+        $client = $this->createMockClient($historyContainer, $response);
+        $gateway = $this->getMockedGateway($client, 4);
 
-		// 591 characters = 4 SMS
-		$text = 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.';
-		$msg = new SmsMessage($text, '00491234', '00491111');
-		$service->send($msg); // Should not throw any exception
-	}
+        $msg = new SmsMessage('Hi', '00491234', '00491111');
+        $success = $gateway->send($msg);
+        $this->assertTrue($success);
+    }
 
-	/**
-	 * @test
-	 */
-	public function sendMaxi1() {
+    /**
+     * @test
+     */
+    public function urlMassDispatch()
+    {
+        $response = new Response(200, array(), '100');
+        $client = $this->createMockClient($historyContainer, $response);
+        $gateway = $this->getMockedGateway($client, 4, false);
 
-		$this->SmskaufenGateway = new SmskaufenGateway(array(
-				'username' => 'XXX',
-				'password' => 'YYY',
-				'gateway' => 13
-			));
+        $msg = new SmsMessage('Hi', '00491234', array('00491111', '015111111', '0170111111'));
+        $success = $gateway->send($msg);
+        $this->assertTrue($success);
 
-		$service = new SmsService($this->SmskaufenGateway);
+        $this->assertCount(1, $historyContainer);
+        $request = $historyContainer[0]['request'];
+        $uri = $request->getUri();
+        parse_str($uri->getQuery(), $query);
+        $this->assertTrue($request->hasHeader('Content-type'));
+        $this->assertContains('application/x-www-form-urlencoded', $request->getHeader('Content-type'));
+        $this->assertSame('GET', $request->getMethod());
+        $this->assertSame('http', $uri->getScheme());
+        $this->assertSame('www.smskaufen.com', $uri->getHost());
+        $this->assertSame('/sms/gateway/sms.php', $uri->getPath());
+        $this->assertSame('XXX', $query['id']);
+        $this->assertSame('YYY', $query['pw']);
+        $this->assertSame('4', $query['type']);
+        $this->assertSame('Hi', $query['text']);
+        $this->assertSame('00491111;015111111;0170111111', $query['empfaenger']);
+        $this->assertSame('00491234', $query['absender']);
+        $this->assertSame('1', $query['massen']);
+        $this->assertLessThan(time(), $query['termin']);
+    }
 
-		// 591 characters = 4 SMS
-		$text = 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.';
-		$msg = new SmsMessage($text, '00491234', '00491111');
-		$this->setExpectedException('Xi\Sms\RuntimeException');
-		$service->send($msg);
-	}
+    /**
+     * @test
+     */
+    public function urlNormalDispatch()
+    {
+        $response = new Response(200, array(), '100');
+        $client = $this->createMockClient($historyContainer, $response);
+        $gateway = $this->getMockedGateway($client, 4);
 
-	/**
-	 * @test
-	 */
-	public function sendFail2() {
+        $msg = new SmsMessage('Hi', '00491234', '00491111');
+        $success = $gateway->send($msg);
+        $this->assertTrue($success);
 
-		$ResponseMock = $this->getMock('Buzz\Message\Response', array('getContent', 'getStatusCode'));
-		$ResponseMock
-			->expects($this->once())
-			->method('getContent')
-			->will($this->returnValue('121'));
-		$ResponseMock
-			->expects($this->once())
-			->method('getStatusCode')
-			->will($this->returnValue(200));
-
-		$ClientMock = $this->getMock('Browser', array('get'));
-		$ClientMock
-			->expects($this->once())
-			->method('get')
-			->will($this->returnValue($ResponseMock));
-
-		$this->SmskaufenGateway = $this->getMock('Xi\Sms\Gateway\SmskaufenGateway', array('getClient'), array(array(
-				'username' => 'XXX',
-				'password' => 'YYY',
-				'gateway' => 4
-			)));
-		$this->SmskaufenGateway
-			->expects($this->once())
-			->method('getClient')
-			->will($this->returnValue($ClientMock));
-
-		$service = new SmsService($this->SmskaufenGateway);
-		$msg = new SmsMessage('Hi', '00491234', '00491111');
-		$success = $service->send($msg);
-		$this->assertFalse($success);
-	}
-
-	/**
-	 * @test
-	 */
-	public function sendFail1() {
-
-		$ResponseMock = $this->getMock('Buzz\Message\Response', array('getStatusCode'));
-		$ResponseMock
-			->expects($this->once())
-			->method('getStatusCode')
-			->will($this->returnValue(404));
-
-		$ClientMock = $this->getMock('Browser', array('get'));
-		$ClientMock
-			->expects($this->once())
-			->method('get')
-			->will($this->returnValue($ResponseMock));
-
-		$this->SmskaufenGateway = $this->getMock('Xi\Sms\Gateway\SmskaufenGateway', array('getClient'), array(array(
-				'username' => 'XXX',
-				'password' => 'YYY',
-				'gateway' => 4
-			)));
-		$this->SmskaufenGateway
-			->expects($this->once())
-			->method('getClient')
-			->will($this->returnValue($ClientMock));
-
-		$service = new SmsService($this->SmskaufenGateway);
-		$msg = new SmsMessage('Hi', '00491234', '00491111');
-		$success = $service->send($msg);
-		$this->assertFalse($success);
-	}
-
-	/**
-	 * @test
-	 */
-	public function sendSuccess() {
-
-		$ResponseMock = $this->getMock('Buzz\Message\Response', array('getContent', 'getStatusCode'));
-		$ResponseMock
-			->expects($this->once())
-			->method('getContent')
-			->will($this->returnValue('100'));
-		$ResponseMock
-			->expects($this->once())
-			->method('getStatusCode')
-			->will($this->returnValue(200));
-
-		$ClientMock = $this->getMock('Browser', array('get'));
-		$ClientMock
-			->expects($this->once())
-			->method('get')
-			->will($this->returnValue($ResponseMock));
-
-		$this->SmskaufenGateway = $this->getMock('Xi\Sms\Gateway\SmskaufenGateway', array('getClient'), array(array(
-				'username' => 'XXX',
-				'password' => 'YYY',
-				'gateway' => 4
-			)));
-		$this->SmskaufenGateway
-			->expects($this->once())
-			->method('getClient')
-			->will($this->returnValue($ClientMock));
-
-		$service = new SmsService($this->SmskaufenGateway);
-		$msg = new SmsMessage('Hi', '00491234', '00491111');
-		$success = $service->send($msg);
-		$this->assertTrue($success);
-	}
-
-	/**
-	 * @test
-	 */
-	public function urlMassDispatch() {
-
-		$ResponseMock = $this->getMock('Buzz\Message\Response', array('getContent', 'isOk'));
-		$ResponseMock
-			->expects($this->once())
-			->method('getContent')
-			->will($this->returnValue('100'));
-		$ResponseMock
-			->expects($this->once())
-			->method('isOk')
-			->will($this->returnValue(true));
-
-		$ClientMock = $this->getMock('Browser', array('get'));
-		$ClientMock
-			->expects($this->once())
-			->method('get')
-			->with(
-				$this->callback(function($actual) {
-					$url = parse_url($actual);
-					parse_str($url['query'], $query);
-					return
-						$url['scheme'] === 'http' &&
-						$url['host'] === 'www.smskaufen.com' &&
-						$url['path'] === '/sms/gateway/sms.php' &&
-						$query['id'] === 'XXX' &&
-						$query['pw'] === 'YYY' &&
-						$query['type'] == 4 &&
-						$query['text'] === 'Hi' &&
-						$query['empfaenger'] === '00491111;015111111;0170111111' &&
-						$query['absender'] === '00491234' &&
-						$query['massen'] == 1 &&
-						strtotime($query['termin']) < time();
-				}),
-				$this->isType('array')
-
-			)
-			->will($this->returnValue($ResponseMock));
-
-		$this->SmskaufenGateway = $this->getMock('Xi\Sms\Gateway\SmskaufenGateway', array('getClient'), array(array(
-				'username' => 'XXX',
-				'password' => 'YYY',
-				'https' => false,
-				'gateway' => 4
-			)));
-		$this->SmskaufenGateway
-			->expects($this->once())
-			->method('getClient')
-			->will($this->returnValue($ClientMock));
-
-		$service = new SmsService($this->SmskaufenGateway);
-		$msg = new SmsMessage('Hi', '00491234', array('00491111', '015111111', '0170111111'));
-		$service->send($msg);
-	}
-
-	/**
-	 * @test
-	 */
-	public function urlNormalDispatch() {
-
-		$ResponseMock = $this->getMock('Buzz\Message\Response', array('getContent', 'isOk'));
-		$ResponseMock
-			->expects($this->once())
-			->method('getContent')
-			->will($this->returnValue('100'));
-		$ResponseMock
-			->expects($this->once())
-			->method('isOk')
-			->will($this->returnValue(true));
-
-		$ClientMock = $this->getMock('Browser', array('get'));
-		$ClientMock
-			->expects($this->once())
-			->method('get')
-			->with(
-				$this->callback(function($actual) {
-					$url = parse_url($actual);
-					parse_str($url['query'], $query);
-					return
-						$url['scheme'] === 'http' &&
-						$url['host'] === 'www.smskaufen.com' &&
-						$url['path'] === '/sms/gateway/sms.php' &&
-						$query['id'] === 'XXX' &&
-						$query['pw'] === 'YYY' &&
-						$query['type'] == 4 &&
-						$query['text'] === 'Hi' &&
-						$query['empfaenger'] === '00491111' &&
-						$query['absender'] === '00491234';
-				}),
-				$this->isType('array')
-			)
-			->will($this->returnValue($ResponseMock));
-
-		$this->SmskaufenGateway = $this->getMock('Xi\Sms\Gateway\SmskaufenGateway', array('getClient'), array(array(
-				'username' => 'XXX',
-				'password' => 'YYY',
-				'https' => false,
-				'gateway' => 4
-			)));
-		$this->SmskaufenGateway
-			->expects($this->once())
-			->method('getClient')
-			->will($this->returnValue($ClientMock));
-
-		$service = new SmsService($this->SmskaufenGateway);
-		$msg = new SmsMessage('Hi', '00491234', '00491111');
-		$service->send($msg);
-	}
+        $this->assertCount(1, $historyContainer);
+        $request = $historyContainer[0]['request'];
+        $uri = $request->getUri();
+        parse_str($uri->getQuery(), $query);
+        $this->assertTrue($request->hasHeader('Content-type'));
+        $this->assertContains('application/x-www-form-urlencoded', $request->getHeader('Content-type'));
+        $this->assertSame('GET', $request->getMethod());
+        $this->assertSame('https', $uri->getScheme());
+        $this->assertSame('www.smskaufen.com', $uri->getHost());
+        $this->assertSame('/sms/gateway/sms.php', $uri->getPath());
+        $this->assertSame('XXX', $query['id']);
+        $this->assertSame('YYY', $query['pw']);
+        $this->assertSame('4', $query['type']);
+        $this->assertSame('Hi', $query['text']);
+        $this->assertSame('00491111', $query['empfaenger']);
+        $this->assertSame('00491234', $query['absender']);
+        $this->assertNotContains('massen', $query);
+        $this->assertNotContains('termin', $query);
+    }
 }
