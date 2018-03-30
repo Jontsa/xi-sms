@@ -1,7 +1,7 @@
 Xi SMS
 =======
 
-SMS library for PHP 5.3+.
+SMS library for PHP 5.5+.
 
 Abstracts away the gateways. Just send'n go!
 
