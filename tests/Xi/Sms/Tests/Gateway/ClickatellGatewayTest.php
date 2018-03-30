@@ -43,10 +43,10 @@ class ClickatellGatewayTest extends \PHPUnit_Framework_TestCase
      */
     public function sendsMultipleRequests()
     {
-        $client = $this->createMockClient($historyContainer, array(
+        $client = $this->createMockClient($historyContainer, [
             new Response(200),
             new Response(200)
-        ));
+        ]);
 
         $gateway = new ClickatellGateway('lussavain', 'lussuta', 'tussia', 'http://api.dr-kobros.com');
         $gateway->setClient($client);
@@ -54,7 +54,7 @@ class ClickatellGatewayTest extends \PHPUnit_Framework_TestCase
         $message = new SmsMessage(
             'Pekkis tassa lussuttaa.',
             '358503028030',
-            array('358503028030', '358441234567')
+            ['358503028030', '358441234567']
         );
 
         $ret = $gateway->send($message);

@@ -19,18 +19,18 @@ class NumberLimitingFilter implements FilterInterface
     /**
      * @var array
      */
-    private $whitelisted = array();
+    private $whitelisted = [];
 
     /**
      * @var array
      */
-    private $blacklisted = array();
+    private $blacklisted = [];
 
     /**
      * @param array $whitelisted An array of whitelist regexes
      * @param array $blacklisted An array of blacklist regexes
      */
-    public function __construct($whitelisted = array(), $blacklisted = array())
+    public function __construct(array $whitelisted = [], array $blacklisted = [])
     {
         $this->whitelisted = $whitelisted;
         $this->blacklisted = $blacklisted;
@@ -44,11 +44,11 @@ class NumberLimitingFilter implements FilterInterface
         $to = $message->getTo();
 
         if ($this->whitelisted) {
-            $to = array_filter($to, array($this, 'handleWhitelisted'));
+            $to = array_filter($to, [$this, 'handleWhitelisted']);
         }
 
         if ($this->blacklisted) {
-            $to = array_filter($to, array($this, 'handleBlacklisted'));
+            $to = array_filter($to, [$this, 'handleBlacklisted']);
         }
         return (bool) $to;
     }

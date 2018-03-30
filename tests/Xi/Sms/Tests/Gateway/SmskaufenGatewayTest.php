@@ -27,12 +27,12 @@ class SmskaufenGatewayTest extends \PHPUnit_Framework_TestCase
 
     private function getMockedGateway(Client $client, $gateway, $https = true)
     {
-        $SmskaufenGateway = new SmskaufenGateway(array(
+        $SmskaufenGateway = new SmskaufenGateway([
             'username' => 'XXX',
             'password' => 'YYY',
             'gateway' => $gateway,
             'https' => $https
-        ));
+        ]);
         $SmskaufenGateway->setClient($client);
         return $SmskaufenGateway;
     }
@@ -45,7 +45,7 @@ class SmskaufenGatewayTest extends \PHPUnit_Framework_TestCase
         $client = $this->createMockClient();
         $gateway = $this->getMockedGateway($client, 13);
 
-        $msg = new SmsMessage('Hi', '00491234', array('00491111', '015111111', '0170111111'));
+        $msg = new SmsMessage('Hi', '00491234', ['00491111', '015111111', '0170111111']);
         $this->setExpectedException('Xi\Sms\RuntimeException');
         $gateway->send($msg);
     }
@@ -59,7 +59,7 @@ class SmskaufenGatewayTest extends \PHPUnit_Framework_TestCase
         $client = $this->createMockClient($historyContainer, $response);
         $gateway = $this->getMockedGateway($client, 4);
 
-        $msg = new SmsMessage('Hi', '00491234', array('00491111', '015111111', '0170111111'));
+        $msg = new SmsMessage('Hi', '00491234', ['00491111', '015111111', '0170111111']);
         $response = $gateway->send($msg); // Should not throw any exception
         $this->assertFalse($response);
     }
@@ -109,7 +109,7 @@ class SmskaufenGatewayTest extends \PHPUnit_Framework_TestCase
      */
     public function sendFail2()
     {
-        $response = new Response(200, array(), '121');
+        $response = new Response(200, [], '121');
         $client = $this->createMockClient($historyContainer, $response);
         $gateway = $this->getMockedGateway($client, 4);
 
@@ -137,7 +137,7 @@ class SmskaufenGatewayTest extends \PHPUnit_Framework_TestCase
      */
     public function sendSuccess()
     {
-        $response = new Response(200, array(), '100');
+        $response = new Response(200, [], '100');
         $client = $this->createMockClient($historyContainer, $response);
         $gateway = $this->getMockedGateway($client, 4);
 
@@ -151,11 +151,11 @@ class SmskaufenGatewayTest extends \PHPUnit_Framework_TestCase
      */
     public function urlMassDispatch()
     {
-        $response = new Response(200, array(), '100');
+        $response = new Response(200, [], '100');
         $client = $this->createMockClient($historyContainer, $response);
         $gateway = $this->getMockedGateway($client, 4, false);
 
-        $msg = new SmsMessage('Hi', '00491234', array('00491111', '015111111', '0170111111'));
+        $msg = new SmsMessage('Hi', '00491234', ['00491111', '015111111', '0170111111']);
         $success = $gateway->send($msg);
         $this->assertTrue($success);
 
@@ -184,7 +184,7 @@ class SmskaufenGatewayTest extends \PHPUnit_Framework_TestCase
      */
     public function urlNormalDispatch()
     {
-        $response = new Response(200, array(), '100');
+        $response = new Response(200, [], '100');
         $client = $this->createMockClient($historyContainer, $response);
         $gateway = $this->getMockedGateway($client, 4);
 

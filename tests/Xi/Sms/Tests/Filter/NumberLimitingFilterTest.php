@@ -23,7 +23,7 @@ class NumberLimitingFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldNotAcceptIfNoReceiversAreLeft()
     {
-        $filter = new NumberLimitingFilter(array(), array('#^358503028030$#'));
+        $filter = new NumberLimitingFilter([], ['#^358503028030$#']);
         $message = new SmsMessage('Body moving', 'BodyMover', '358503028030');
         $ret = $filter->accept($message);
         $this->assertFalse($ret);
@@ -36,8 +36,8 @@ class NumberLimitingFilterTest extends \PHPUnit_Framework_TestCase
     public function onlyTheStrongestShouldRemainAfterWhitelistingAndBlacklisting()
     {
         $filter = new NumberLimitingFilter(
-            array('#^358#'),
-            array('#^3585030280(30|31)$#', '#666$#')
+            ['#^358#'],
+            ['#^3585030280(30|31)$#', '#666$#']
         );
 
         $message = new SmsMessage('Body moving', 'BodyMover', '358503028031');

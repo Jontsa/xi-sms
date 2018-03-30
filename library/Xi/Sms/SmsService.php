@@ -27,7 +27,7 @@ class SmsService
     /**
      * @var FilterInterface[]
      */
-    private $filters = array();
+    private $filters = [];
 
     /**
      * @param GatewayInterface $gateway

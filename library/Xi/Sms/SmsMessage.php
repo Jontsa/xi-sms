@@ -27,7 +27,7 @@ class SmsMessage
     /**
      * @var array
      */
-    private $to = array();
+    private $to = [];
 
     /**
      * @param string $body

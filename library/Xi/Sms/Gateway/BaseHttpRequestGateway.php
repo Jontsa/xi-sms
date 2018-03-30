@@ -37,9 +37,9 @@ abstract class BaseHttpRequestGateway Implements GatewayInterface
     public function getClient()
     {
         if (!$this->client) {
-            $this->client = new Client(array(
+            $this->client = new Client([
                 RequestOptions::HTTP_ERRORS => false
-            ));
+            ]);
         }
         return $this->client;
     }

@@ -9,14 +9,15 @@
 
 namespace Xi\Sms\Gateway;
 
+use GuzzleHttp\RequestOptions;
 use Xi\Sms\SmsMessage;
-use XMLWriter;
 
 /**
  * Infobip gateway
  */
 class InfobipGateway extends BaseHttpRequestGateway
 {
+
     /**
      * @var string
      */
@@ -30,16 +31,14 @@ class InfobipGateway extends BaseHttpRequestGateway
     /**
      * @var string
      */
-    private $endpoint;
+    private $endpoint = 'https://api.infobip.com';
 
     public function __construct(
         $user,
-        $password,
-        $endpoint = 'https://api2.infobip.com/api'
+        $password
     ) {
         $this->user = $user;
         $this->password = $password;
-        $this->endpoint = $endpoint;
     }
 
     /**
@@ -47,58 +46,35 @@ class InfobipGateway extends BaseHttpRequestGateway
      */
     public function send(SmsMessage $message)
     {
-        $writer = new XMLWriter();
+        $headers = $this->createAuthorizationHeaders();
 
-        $writer->openMemory();
-        $writer->startDocument('1.0', 'UTF-8');
+        $data = [
+            'from' => $message->getFrom(),
+            'to' => $message->getTo(),
+            'text' => $message->getBody()
+        ];
 
-        $writer->startElement('SMS');
+        $endpoint = $this->endpoint . '/sms/1/text/single';
 
-        $writer->startElement('authentication');
+        $response = $this->getClient()->post(
+            $endpoint,
+            [
+                RequestOptions::HEADERS => $headers,
+                RequestOptions::JSON => $data
+            ]
+        );
 
-        $writer->startElement('username');
-        $writer->text($this->user);
-        $writer->endElement();
+        return ($response->getStatusCode() == 200);
+    }
 
-        $writer->startElement('password');
-        $writer->text($this->password);
-        $writer->endElement();
-
-        $writer->endElement();
-
-        $writer->startElement('message');
-
-        $writer->startElement('sender');
-        $writer->text($message->getFrom());
-        $writer->endElement();
-
-        $writer->startElement('datacoding');
-        $writer->text('3');
-        $writer->endElement();
-
-        $writer->startElement('text');
-        $writer->text(utf8_decode($message->getBody()));
-        $writer->endElement();
-
-        $writer->endElement();
-
-        $writer->startElement('recipients');
-        foreach ($message->getTo() as $to) {
-            $writer->startElement('gsm');
-            $writer->text($to);
-            $writer->endElement();
-        }
-        $writer->endElement();
-
-        $writer->endElement();
-        $writer->endDocument();
-
-        $requestBody = 'XML=' . preg_replace('/<\?xml.*\?>\n?/', '', $writer->outputMemory());
-
-        $this->getClient()->post($this->endpoint . '/v3/sendsms/xml', array(
-            'body' => $requestBody
-        ));
-
-        return true;
+    /**
+     * @todo Infobip recommends API key authentication
+     * @return array
+     */
+    private function createAuthorizationHeaders()
+    {
+        return [
+            'Authorization' => 'Basic ' . base64_encode($this->user . ':' . $this->password)
+        ];
     }
 }

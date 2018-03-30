@@ -18,22 +18,22 @@ use Xi\Sms\RuntimeException;
 
 class SmskaufenGateway extends BaseHttpRequestGateway {
 
-	protected $_errorCodes = array(
+	protected $_errorCodes = [
 		'111' => 'IP blocked',
 		'112' => 'Wrong credentials (login/pw/apikey)',
 		'122' => 'Text is empty',
 		'123' => 'Recipient is empty',
 		'140' => 'No credit'
-	);
+	];
 
-	protected $settings = array(
+	protected $settings = [
 		'username' => '',
 		'password' => '',
 		'api_http' => 'http://www.smskaufen.com/sms/gateway/',
 		'api_https' => 'https://www.smskaufen.com/sms/gateway/',
 		'gateway' => 13,
 		'https' => false,
-	);
+	];
 
 	public function getBaseUrl() {
 		if ($this->settings['https']) {
@@ -46,7 +46,7 @@ class SmskaufenGateway extends BaseHttpRequestGateway {
 	 * @param array $settings
 	 * @throws RuntimeException Exception.
 	 */
-	public function __construct($settings = array()) {
+	public function __construct(array $settings = []) {
 		$this->settings = array_merge($this->settings, $settings);
 
 		if (empty($this->settings['username']) || empty($this->settings['password'])) {
@@ -72,34 +72,34 @@ class SmskaufenGateway extends BaseHttpRequestGateway {
 		if (empty($text)) {
 			return false;
 		}
-		if (strlen($text) > 160 && !in_array($this->settings['gateway'], array(2,3,4,8))) {
+		if (strlen($text) > 160 && !in_array($this->settings['gateway'], [2,3,4,8])) {
 			throw new RuntimeException('Only gateways 2,3,4,8 allow sending messages with more than 160 chars.');
 		}
 
 		$numbers = (array) $to;
-		$params = array(
+		$params = [
 			'id' => $this->settings['username'],
 			'pw' => $this->settings['password'],
 			'type' => $this->settings['gateway'],
 			'text' => $text,
 			'empfaenger' => implode(';', $numbers),
 			'absender' => $from,
-		);
+		];
 
 		if (count($numbers) > 1) {
 			$params['massen'] = 1;
 			$params['termin'] = date('d.m.Y-00:01', strtotime("-1 day")); # past => immediately
 		}
 
-		if (!empty($params['massen']) && !in_array($this->settings['gateway'], array(2,3,4,8))) {
+		if (!empty($params['massen']) && !in_array($this->settings['gateway'], [2,3,4,8])) {
 			throw new RuntimeException('Only gateways 2,3,4,8 allow mass sending');
 		}
 
 		$res = $this->getClient()->get(
 			$this->getBaseUrl() . 'sms.php?'.http_build_query($params),
-			array(
-				RequestOptions::HEADERS => array('Content-type' => 'application/x-www-form-urlencoded')
-			)
+			[
+				RequestOptions::HEADERS => ['Content-type' => 'application/x-www-form-urlencoded']
+			]
 		);
 
 		if ($res->getStatusCode() != 200) {

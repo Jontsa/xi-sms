@@ -103,7 +103,7 @@ class IpxGateway implements GatewayInterface
             //create soap client while setting response timeout to 10 minutes
             $this->client = new \SoapClient(
                 $this->wsdlUrl,
-                array('default_socket_timeout' => $this->timeout)
+                ['default_socket_timeout' => $this->timeout]
             );
         }
 
@@ -120,7 +120,7 @@ class IpxGateway implements GatewayInterface
      *
      * @return array
      */
-    protected function getParams($from, $to, $body, $params = array())
+    protected function getParams($from, $to, $body, array $params = [])
     {
         $correlationId = microtime(true);
         $originatingAddress = $from; //If MSISDN
@@ -134,7 +134,7 @@ class IpxGateway implements GatewayInterface
         }
 
         return array_merge(
-            array(
+            [
                 'correlationId' => $correlationId,
                 'originatingAddress' => $originatingAddress,
                 'originatorTON' => $originatorTON,
@@ -156,7 +156,7 @@ class IpxGateway implements GatewayInterface
                 'campaignName' => '#NULL#',
                 'username' => $this->username,
                 'password' => $this->password
-            ),
+            ],
             $params
         );
     }
@@ -194,12 +194,12 @@ class IpxGateway implements GatewayInterface
             foreach($parts as $index => $body) {
                 $params = array('userDataHeader' => sprintf('0500030F%02d%02d', $messageCount, $index+1));
                 $params = $this->getParams($from, $to, $body, $params);
-                $result = $client->__soapCall('send', array('request' => $params));
+                $result = $client->__soapCall('send', ['request' => $params]);
             }
         }
         else {
             $params = $this->getParams($from, $to, $body);
-            $result = $client->__soapCall('send', array('request' => $params));
+            $result = $client->__soapCall('send', ['request' => $params]);
         }
 
 

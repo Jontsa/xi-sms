@@ -19,7 +19,7 @@ class MockGateway implements GatewayInterface
     /**
      * @var array
      */
-    private $sentMessages = array();
+    private $sentMessages = [];
 
     public function send(SmsMessage $message)
     {

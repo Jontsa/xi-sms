@@ -16,7 +16,7 @@ class PixieGatewayTest extends \PHPUnit_Framework_TestCase
     {
         $response = new Response(
             200,
-            array(),
+            [],
             '<?xml version="1.0" encoding = "ISO-8859-1" ?>'.
                 '<response code="0"><cost>50</cost>'.
             '</response>'
@@ -28,7 +28,7 @@ class PixieGatewayTest extends \PHPUnit_Framework_TestCase
     {
         $response = new Response(
             200,
-            array(),
+            [],
             '<?xml version="1.0" encoding = "ISO-8859-1" ?>'.
                 '<response code="'.$code.'" description="'.$message.'">'.
             '</response>'
@@ -40,7 +40,7 @@ class PixieGatewayTest extends \PHPUnit_Framework_TestCase
     {
         $response = new Response(
             200,
-            array(),
+            [],
             '<?not_valid_xml<'
         );
         return $response;
@@ -65,7 +65,7 @@ class PixieGatewayTest extends \PHPUnit_Framework_TestCase
         $message = new SmsMessage(
             'Hello world',
             'Santa Claus',
-            array(12345678)
+            [12345678]
         );
 
         $result = $gateway->send($message);
@@ -85,7 +85,7 @@ class PixieGatewayTest extends \PHPUnit_Framework_TestCase
         $message = new SmsMessage(
             'Rea i morgon. Välkommen',
             'Butiken',
-            array(4670234567,463849235)
+            [4670234567,463849235]
         );
 
         $gateway->sendOrThrowException($message);
@@ -112,7 +112,7 @@ class PixieGatewayTest extends \PHPUnit_Framework_TestCase
         $message = new SmsMessage(
             'Nice message',
             'Very long sender name',
-            array(12345678)
+            [12345678]
         );
 
         $this->setExpectedException('\Xi\Sms\RuntimeException');
@@ -136,7 +136,7 @@ class PixieGatewayTest extends \PHPUnit_Framework_TestCase
         $message = new SmsMessage(
             'Nice message',
             'Me',
-            array(12345678)
+            [12345678]
         );
 
         $this->setExpectedException('Xi\Sms\RuntimeException');

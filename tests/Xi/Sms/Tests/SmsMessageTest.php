@@ -15,7 +15,7 @@ class SmsMessageTest extends \PHPUnit_Framework_TestCase
 
         $this->assertSame('Tussi', $message->getBody());
         $this->assertSame('Lussutaja', $message->getFrom());
-        $this->assertSame(array('358503028030'), $message->getTo());
+        $this->assertSame(['358503028030'], $message->getTo());
     }
 
     /**
@@ -29,7 +29,7 @@ class SmsMessageTest extends \PHPUnit_Framework_TestCase
         $this->assertCount(0, $message->getTo());
 
         $this->assertSame($message, $message->addTo('12345'));
-        $this->assertSame(array('12345'), $message->getTo());
+        $this->assertSame(['12345'], $message->getTo());
     }
 
     /**
@@ -46,9 +46,9 @@ class SmsMessageTest extends \PHPUnit_Framework_TestCase
             ]
         );
 
-        $this->assertSame(array('358503028030'), $message->getTo());
+        $this->assertSame(['358503028030'], $message->getTo());
 
         $message->addTo('358503028030');
-        $this->assertSame(array('358503028030'), $message->getTo());
+        $this->assertSame(['358503028030'], $message->getTo());
     }
 }
